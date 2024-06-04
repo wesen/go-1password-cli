@@ -111,6 +111,28 @@ func (c *Client) Vault(vaultIDOrName string) (*Vault, error) {
 	return &out, nil
 }
 
+// Items returns a list of items across all vaults
+func (c *Client) Items() ([]*Item, error) {
+	var out []*Item
+	err := c.runOpAndUnmarshal("item", []string{"list"}, &out)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// VaultItems returns a list of items within a specific vault
+func (c *Client) VaultItems(vaultIDOrName string) ([]*Item, error) {
+	var out []*Item
+	err := c.runOpAndUnmarshal("item", []string{"list", "--vault", vaultIDOrName}, &out)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 // Item returns an item by its ID or name, across all Vaults the user has access to
 // To get items scoped to a specific Vault, use VaultItem()
 func (c *Client) Item(itemIDOrName string) (*Item, error) {
@@ -121,6 +143,32 @@ func (c *Client) Item(itemIDOrName string) (*Item, error) {
 	}
 
 	return &out, nil
+}
+
+// CreateItem creates a new item in the specified vault
+func (c *Client) CreateItem(vaultIDOrName string, item *Item) (*Item, error) {
+	jsonData, err := json.Marshal(item)
+	if err != nil {
+		return nil, err
+	}
+
+	var out Item
+	err = c.runOpAndUnmarshal("item", []string{"create", "--vault", vaultIDOrName, string(jsonData)}, &out)
+	if err != nil {
+		return nil, err
+	}
+
+	return &out, nil
+}
+
+// DeleteItem deletes an item by its ID
+func (c *Client) DeleteItem(itemID string) error {
+	_, err := c.runOp("item", []string{"delete", itemID})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // VaultItem returns an item by it's ID or name, within the specified Vault
